@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Library Management System</title>
+    <style>
+        #floating-notification {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
+        .floating-text {
+            display: inline-block;
+            padding-left: 100%;
+            animation: scroll-left 10s linear infinite;
+        }
+
+        @keyframes scroll-left {
+            0% {
+                transform: translateX(100%);
+            }
+            100% {
+                transform: translateX(-100%);
+            }
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <!-- Include the floating text notification element -->
+        <div id="floating-notification">
+            <div id="floating-text" class="floating-text">No books issued.</div>
+        </div>
+
+        <!-- Other content -->
+    </main>
+    <script>
+        async function fetchCurrentLoans() {
+    try {
+        const response = await fetch('/student/loans/current');
+        if (!response.ok) {
+            throw new Error('Failed to fetch current loans');
+        }
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('Error fetching current loans:', error);
+        return [];
+    }
+}
+
+async function setFloatingText() {
+    const currentLoans = await fetchCurrentLoans();
+    const floatingTextDiv = document.getElementById('floating-text');
+
+    if (currentLoans.length > 0) {
+        const messages = currentLoans.map(loan => {
+            const dueDate = new Date(loan.dueTime).toLocaleDateString();
+            const issueTime = new Date(loan.issueTime).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short"});
+            return `Hello! Deadline for the book ${loan.book.title} is ${dueDate}, make sure to return after ${getDaysUntilReturn(loan.dueTime)} days. Issued at ${issueTime}`;
+        });
+        floatingTextDiv.textContent = messages.join(' | ');
+    } else {
+        floatingTextDiv.textContent = 'Hello! No current loans.';
+    }
+}
+
+
+
+        window.onload = setFloatingText;
+    </script>
+</body>
+</html>
